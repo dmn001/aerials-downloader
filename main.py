@@ -1,17 +1,19 @@
 """
-This code will (asynchronously) download all the preview images and generate a README.md that
-  contains a link to all the screen savers video.
+This code will download all the preview videos single threaded.
+The filename format is Category - Name - url end part.mov
 """
-import asyncio
-import aiohttp
-import aiofiles
 import json
 import pandas
-import warnings
+from pprint import pprint
+import requests
+import os
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+# Disable SSL warnings
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # read the entries.json from system
-# if you are not running macOS Sonoma, you can use `data/entries.json`
-ORIGINAL_ENTRIES_PATH = '/Library/Application Support/com.apple.idleassetsd/Customer/entries.json'
+ORIGINAL_ENTRIES_PATH = './data/entries.json'
 
 with open(ORIGINAL_ENTRIES_PATH, 'r') as f:
     ENTRIES = json.load(f)
@@ -34,82 +36,33 @@ if len(ASSET_URLS) > len(DISPLAY_NAMES):
     warnings.warn(f'There are {len(ASSET_URLS)} assets but only {len(DISPLAY_NAMES)} display names. Some assets will be missing from output.')
 
 
-async def download(session: aiohttp.ClientSession, 
-                   url: str, 
-                   filename:str):
-    """
-    Download content from the given URL into the file.
-    """
-    async with session.get(url, verify_ssl=False) as response:
-        async with aiofiles.open(filename, mode='wb') as f:
-            await f.write(await response.read())
+def download_file(url, destination):
+    if os.path.exists(destination):
+        print(f"File '{destination}' already exists. Skipping download.")
+        return
 
+    response = requests.get(url, stream=True, verify=False)
+    with open(destination, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=128):
+            file.write(chunk)
 
-async def download_all(urls: pandas.Series, folder:str):
-    """
-    Download from a Series of URLs to the given folder.
-    
-    The keys of the series will be used as the file name.
+def download_single_thread():
+    print(NAMES_AND_URLS.columns)
 
-    e.g. To download all preview images into a folder called "preview_images", use
-    ```
-    asyncio.run(download_all(NAMES_AND_URLS['previewImage'], 'preview_images'))
-    ```
-    """
-    async with aiohttp.ClientSession() as session:
-        tasks = [
-            asyncio.ensure_future(
-                download(session, url, f'{folder}/{name}.{url.split(".")[-1]}')
-            )
-            for name, url in urls.items()
-        ]
-        await asyncio.gather(*tasks)
+    for index, row in NAMES_AND_URLS.iterrows():
+        # asset_id = row['assetId']
+        category = row['category']
+        name = row['name']
+        url = row['fullVideo']
 
+        url_id = row['fullVideo'].split('/')[-1][:-4]
+        print(url_id)
 
-def save_screen_savers_url_as_markdown():
-    # extract fields needed
-    table = NAMES_AND_URLS.reset_index(drop=False)\
-        [['name', 'category', 'previewImage', 'fullVideo', 'assetId']]\
-        .set_index('name')
+        filename = "%s - %s [%s].mov" % (category,name,url_id)
+        print(filename)
 
-    # convert preview image into Markdown images
-    table['previewImage'] = table.apply(
-        lambda row: f'![{row.name}](preview_images/{row.assetId}.png)', 
-        axis=1
-    )
-    
-    # convert full video into Markdown links
-    table['fullVideo'] = table['fullVideo'].apply(
-        lambda url: f'[Link]({url})'
-    )
-    
-    # change column names for Markdown
-    table = table.drop('assetId', axis=1)
-    table.index.name = 'Name'
-    table.columns = ['Category', 'Preview Image', 'Full Video']
-    
-    # save to "table.md" by category
-    with open('README.md', 'w') as f:
-        # add header
-        with open('README_header.md') as header:
-            f.write(header.read())
-
-        group_by_category = table.groupby('Category', sort=False)
-
-        for category in group_by_category.groups.keys():
-            f.write(f'- [{category}]({category.lower()})\n')
-        
-        f.write('\n')
-
-        for category, category_table in group_by_category:
-            f.write(f'## {category}\n\n')
-            f.write(category_table.drop('Category', axis=1).to_markdown())
-            f.write('\n')
-
+        download_file(url, "./videos/" + filename)
+        # quit()
 
 if __name__ == "__main__":
-    # download all preview images
-    asyncio.run(download_all(NAMES_AND_URLS['previewImage'], 'preview_images'))
-
-    # create a README file
-    save_screen_savers_url_as_markdown()
+    download_single_thread()
