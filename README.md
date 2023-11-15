@@ -1,4 +1,4 @@
-This is a fork of: https://github.com/lejacobroy/aerials-downloader
+This is a fork of: https://github.com/zhongzachary/sonoma-screen-savers and https://github.com/lejacobroy/aerials-downloader
 
 The difference is this downloads all of the videos single threaded without any code modification required. The original only downloads the preview images, and using async would try to download all the videos, 100 at a time, which would not work very well even with strong internet connections.
 
