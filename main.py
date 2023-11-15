@@ -68,7 +68,9 @@ def download_file(url, destination):
         raise e
 
 def download_single_thread():
-    print(NAMES_AND_URLS.columns)
+    # print(NAMES_AND_URLS.columns)
+    total_videos = len(NAMES_AND_URLS)
+    count = 1
 
     for index, row in NAMES_AND_URLS.iterrows():
         # asset_id = row['assetId']
@@ -82,8 +84,10 @@ def download_single_thread():
         filename = "%s - %s [%s].mov" % (category,name,url_id)
         print(filename)
 
+        print(f"\nDownloading video {count} of {total_videos}: {filename}")
         download_file(url, "./videos/" + filename)
-        # quit()
+
+        count += 1
 
 if __name__ == "__main__":
     download_single_thread()
