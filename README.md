@@ -6,6 +6,8 @@ This uses temp file so you can resume downloads.
 
 This uses a descriptive filename of category, name, and url slug end, instead of just the asset id.
 
+Example filename: `Landscape - Sonoma Horizon [W010_C003_F01_third_sdr_4k_qp24_15Mbps_240p_t2160_tsa].mov`
+
 # macOS Sonoma Screen Savers
 
 Here is a list of all the screen savers from macOS Sonoma.
