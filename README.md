@@ -1,8 +1,8 @@
 This is a fork of: https://github.com/lejacobroy/aerials-downloader
 
-The difference is this downloads all of the videos single threaded without any code modification required. The original only downloads the preview images, and using async would try to download videos async 100 at the same time, which would not work very well.
+The difference is this downloads all of the videos single threaded without any code modification required. The original only downloads the preview images, and using async would try to download all the videos, 100 at a time, which would not work very well even with strong internet connections.
 
-This uses temp file so you can resume downloads.
+This uses a temp file so you can resume downloads.
 
 This uses a descriptive filename of category, name, and url slug end, instead of just the asset id.
 
