@@ -37,6 +37,11 @@ if len(ASSET_URLS) > len(DISPLAY_NAMES):
 
 
 def download_file(url, destination):
+    # Ensure the directory exists
+    video_dir = os.path.dirname(destination)
+    if not os.path.exists(video_dir):
+        os.makedirs(video_dir)
+
     # Create a temporary file
     temp_destination = destination + '.temp'
 
