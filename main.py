@@ -37,14 +37,30 @@ if len(ASSET_URLS) > len(DISPLAY_NAMES):
 
 
 def download_file(url, destination):
-    if os.path.exists(destination):
-        print(f"File '{destination}' already exists. Skipping download.")
-        return
+    # Create a temporary file
+    temp_destination = destination + '.temp'
 
-    response = requests.get(url, stream=True, verify=False)
-    with open(destination, 'wb') as file:
-        for chunk in response.iter_content(chunk_size=128):
-            file.write(chunk)
+    try:
+        # Check if the file already exists
+        if os.path.exists(destination):
+            print(f"File '{destination}' already exists. Skipping download.")
+            return
+
+        # Disable SSL verification
+        response = requests.get(url, stream=True, verify=False)
+
+        with open(temp_destination, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=128):
+                file.write(chunk)
+
+        # Rename the temporary file to the final destination
+        os.rename(temp_destination, destination)
+
+    except Exception as e:
+        # If any exception occurs, remove the temporary file
+        if os.path.exists(temp_destination):
+            os.remove(temp_destination)
+        raise e
 
 def download_single_thread():
     print(NAMES_AND_URLS.columns)
